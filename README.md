@@ -6,28 +6,28 @@ DiscreetDisplay is a browser extension designed to enhance privacy and discretio
 
 ## Features
 
-- *Dynamic Blurring*: Automtically applies a blur effect to specified elements on web pages.
+- **Dynamic Blurring**: Automatically applies a blur effect to specified elements on web pages.
 
 ## Upcoming
 
-- *Toggle Switch*: Easy on/off toggle for blurring functionality.
-- *Varied Hiding Methods*: Supports different methods of hiding data, including varying degrees of blurring and scrambling.
-- *Multiple Selectors*: Capable of handling multiple child selectors within a single parent selector.
-- *Customizable Configurations*: Separate configuration files for different domains, allowing tailored behavior per website.
-- *Cross-Browser Support*: Compatible with Firefox and Edge (Chromium-based) browsers.
+- **Toggle Switch**: Easy on/off toggle for blurring functionality.
+- **Varied Hiding Methods**: Supports different methods of hiding data, including varying degrees of blurring and scrambling.
+- **Multiple Selectors**: Capable of handling multiple child selectors within a single parent selector.
+- **Customizable Configurations**: Separate configuration files for different domains, allowing tailored behavior per website.
+- **Cross-Browser Support**: Compatible with Firefox and Edge (Chromium-based) browsers.
 
 ## Installation
 
-1. *Clone Repository*: `git clone https://github.com/lukeart/DiscreetDisplay.git``
-2. *Load the Extension in Firefox*:
+1. **Clone Repository**: `git clone https://github.com/lukeart/DiscreetDisplay.git`
+2. **Load the Extension in Firefox**:
    - Open Firefox and navigate to `about:debugging`.
    - Click "This Firefox" and then "Load Temporary Add-on".
    - Select the `manifest.json` file from the cloned directory.
 
 ## Usage
 
-1. *Configure*: Edit the `config.json` files to specify which elements should be blurred or scrambled.
-2. *Toggle*: Use the extension's popup toggle switch to enable or disable the blurring effect on the current page.
+1. **Configure**: Edit the `config.json` files to specify which elements should be blurred or scrambled.
+2. **Toggle**: Use the extension's popup toggle switch to enable or disable the blurring effect on the current page.
 
 ## Contributing
 
