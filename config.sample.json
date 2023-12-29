@@ -1,0 +1,11 @@
+[
+    {
+      "parentSelector": ".info-tile",
+      "childSelector": ".sensitive-data"
+    },
+    {
+      "parentSelector": ".profile-card",
+      "childSelector": ".private-info"
+    }
+  ]
+  
