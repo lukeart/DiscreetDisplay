@@ -1,11 +1,15 @@
 [
-    {
-      "parentSelector": ".info-tile",
-      "childSelector": ".sensitive-data"
-    },
-    {
-      "parentSelector": ".profile-card",
-      "childSelector": ".private-info"
-    }
-  ]
-  
+  {
+    "parentSelector": ".info-tile",
+    "childSelectors": [
+      { "selector": ".sensitive-data", "method": "blur", "level": "8px" },
+      { "selector": ".confidential", "method": "scramble" }
+    ]
+  },
+  {
+    "parentSelector": ".profile-card",
+    "childSelectors": [
+      { "selector": ".private-info", "method": "blur" } // Default level will be used
+    ]
+  }
+]
