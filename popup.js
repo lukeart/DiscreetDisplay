@@ -2,16 +2,25 @@ let isBlurred = false; // To keep track of the current state
 
 document.getElementById('toggleSwitch').addEventListener('change', (event) => {
   isBlurred = event.target.checked;
-  sendMessageToContentScript(isBlurred ? 'blur' : 'unblur');
+  sendMessageToContentScript(isBlurred);
+
+  // Save the state to storage
+  browser.storage.local.set({ isBlurred });
 });
 
-function sendMessageToContentScript(action) {
+function sendMessageToContentScript(blurState) {
   fetch(browser.runtime.getURL('config.json'))
     .then(response => response.json())
     .then(config => {
       browser.tabs.query({ active: true, currentWindow: true }, tabs => {
-        browser.tabs.sendMessage(tabs[0].id, { action, config });
+        browser.tabs.sendMessage(tabs[0].id, { isBlurred: blurState, config });
       });
     })
     .catch(error => console.error('Error loading configuration:', error));
 }
+
+document.addEventListener('DOMContentLoaded', () => {
+  browser.storage.local.get('isBlurred', (result) => {
+    document.getElementById('toggleSwitch').checked = result.isBlurred || false;
+  });
+});
