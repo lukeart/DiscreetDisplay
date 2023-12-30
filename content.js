@@ -65,64 +65,62 @@ function removeHidingMethods(config) {
     });
 }
 
-
-
-// function applyBlurToElements(config) {
-//     config.forEach(({ parentSelector, childSelector }) => {
-//         document.querySelectorAll(parentSelector).forEach(parentDiv => {
-//             const childDivs = parentDiv.querySelectorAll(childSelector);
-//             childDivs.forEach(div => div.style.filter = 'blur(5px)');
-//         });
-//     });
-// }
-
-// function removeBlurFromElements(config) {
-//     config.forEach(({ parentSelector, childSelector }) => {
-//         document.querySelectorAll(parentSelector).forEach(parentDiv => {
-//             const childDivs = parentDiv.querySelectorAll(childSelector);
-//             childDivs.forEach(div => div.style.filter = ''); // Remove the blur
-//         });
-//     });
-// }
-
 let currentlyBlurred = false; // Track if the blur is currently applied
 
 function observeMutations(config) {
-  const observer = new MutationObserver(mutations => {
-    if (currentlyBlurred) {
-      mutations.forEach(mutation => {
-        if (mutation.addedNodes.length) {
-          applyHidingMethods(config); // Reapply hiding methods to new elements
-        }
+    const observer = new MutationObserver(mutations => {
+        mutations.forEach(mutation => {
+          if (currentlyBlurred && mutation.addedNodes.length) {
+            applyHidingMethods(config); // Apply hiding methods to new elements
+          }
+        });
       });
-    }
-  });
 
-  const observerConfig = {
-    childList: true,
-    subtree: true
-  };
+    const observerConfig = {
+        childList: true,
+        subtree: true
+    };
 
-  const targetNode = document.body; // Adjust this as needed
-  observer.observe(targetNode, observerConfig);
+    const targetNode = document.body; // Adjust this as needed
+    observer.observe(targetNode, observerConfig);
 }
 
 function handleMessage(message) {
-  if (message.isBlurred) {
-    applyHidingMethods(message.config);
-  } else {
-    removeHidingMethods(message.config);
-  }
-  currentlyBlurred = message.isBlurred;
+    if (message.isBlurred) {
+        applyHidingMethods(message.config);
+    } else {
+        removeHidingMethods(message.config);
+    }
+    currentlyBlurred = message.isBlurred;
 }
 
 fetch(browser.runtime.getURL('config.json'))
-  .then(response => response.json())
-  .then(config => {
-    observeMutations(config); // Start observing for changes with the initial configuration
-  })
-  .catch(error => console.error('Error loading configuration:', error));
+    .then(response => response.json())
+    .then(config => {
+        observeMutations(config); // Start observing for changes with the initial configuration
+    })
+    .catch(error => console.error('Error loading configuration:', error));
 
 // Add the listener for messages
 browser.runtime.onMessage.addListener(handleMessage);
 
+function initializeExtension() {
+    browser.storage.local.get('isBlurred', (result) => {
+      const isBlurred = result.isBlurred || false;
+      fetch(browser.runtime.getURL('config.json'))
+        .then(response => response.json())
+        .then(config => {
+          if (isBlurred) {
+            applyHidingMethods(config); // Apply initially for existing elements
+            currentlyBlurred = true;
+            observeMutations(config); // Setup observer for dynamic content
+          } else {
+            observeMutations(config); // Only observe, don't apply
+          }
+        })
+        .catch(error => console.error('Error loading configuration:', error));
+    });
+  }
+  
+  
+initializeExtension();

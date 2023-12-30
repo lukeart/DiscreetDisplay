@@ -21,7 +21,6 @@ function sendMessageToContentScript(blurState) {
 
 document.addEventListener('DOMContentLoaded', () => {
   browser.storage.local.get('isBlurred', (result) => {
-    isBlurred = result.isBlurred || false; // Default to false if not set
-    document.getElementById('toggleSwitch').checked = isBlurred;
+    document.getElementById('toggleSwitch').checked = result.isBlurred || false;
   });
 });
