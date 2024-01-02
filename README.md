@@ -7,12 +7,12 @@ DiscreetDisplay is a browser extension designed to enhance privacy and discretio
 ## Features
 
 - **Dynamic Blurring**: Automatically applies a blur effect to specified elements on web pages.
+- **Toggle Switch**: Easy on/off toggle for blurring functionality.
+- **Multiple Selectors**: Capable of handling multiple child selectors within a single parent selector.
 
 ## Upcoming
 
-- **Toggle Switch**: Easy on/off toggle for blurring functionality.
 - **Varied Hiding Methods**: Supports different methods of hiding data, including varying degrees of blurring and scrambling.
-- **Multiple Selectors**: Capable of handling multiple child selectors within a single parent selector.
 - **Customizable Configurations**: Separate configuration files for different domains, allowing tailored behavior per website.
 - **Cross-Browser Support**: Compatible with Firefox and Edge (Chromium-based) browsers.
 
