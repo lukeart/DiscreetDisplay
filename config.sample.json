@@ -1,35 +1,45 @@
-[
-  {
-    "rules": [
-      {
-        "type": "tableColumn",
-        "tableSelector": "",
-        "tableHeaderSelector": "",
-        "columnNameSelector": "",
-        "rowSelector": "tr",
-        "cellSelector": "td",
-        "columnIdentifier": {
-          "method": "headerName",
-          "value": "Name"
+{
+  "rules": [
+    {
+      "type": "elementSelector",
+      "parentSelector": ".content-area",
+      "childSelectors": [
+        {
+          "selector": ".sensitive-info",
+          "method": "blur",
+          "level": "5px"
         },
-        "hidingMethod": "blur",
-        "level": "3px"
+        {
+          "selector": ".confidential-text",
+          "method": "scramble"
+        }
+      ]
+    },
+    {
+      "type": "tableColumn",
+      "tableSelector": ".data-table",
+      "columnNameSelector": "th",
+      "rowSelector": "tr",
+      "cellSelector": "td",
+      "columnIdentifier": {
+        "method": "headerName",
+        "value": "Email"
       },
-      {
-        "type": "elementSelector",
-        "parentSelector": "",
-        "childSelectors": [
-          {
-            "selector": "",
-            "method": "blur"
-          },
-          {
-            "selector": "",
-            "method": "blur",
-            "level": "2px"
-          }
-        ]
-      }
-    ]
-  }
-]
+      "hidingMethod": "pixelate",
+      "level": "medium"
+    },
+    {
+      "type": "tableColumn",
+      "tableSelector": ".report-table",
+      "columnNameSelector": "th",
+      "rowSelector": "tr",
+      "cellSelector": "td",
+      "columnIdentifier": {
+        "method": "index",
+        "value": 2
+      },
+      "hidingMethod": "blur",
+      "level": "3px"
+    }
+  ]
+}

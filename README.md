@@ -7,6 +7,7 @@ DiscreetDisplay is a browser extension designed to enhance privacy and discretio
 ## Features
 
 - **Dynamic Blurring**: Automatically applies a blur effect to specified elements on web pages.
+- **Flexible Column Identification**: Targets specific columns in table for hiding, based on column index of header names.
 - **Toggle Switch**: Easy on/off toggle for blurring functionality.
 - **Multiple Selectors**: Capable of handling multiple child selectors within a single parent selector.
 
