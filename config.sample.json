@@ -1,15 +1,35 @@
 [
   {
-    "parentSelector": ".info-tile",
-    "childSelectors": [
-      { "selector": ".sensitive-data", "method": "blur", "level": "8px" },
-      { "selector": ".confidential", "method": "scramble" }
-    ]
-  },
-  {
-    "parentSelector": ".profile-card",
-    "childSelectors": [
-      { "selector": ".private-info", "method": "blur" } // Default level will be used
+    "rules": [
+      {
+        "type": "tableColumn",
+        "tableSelector": "",
+        "tableHeaderSelector": "",
+        "columnNameSelector": "",
+        "rowSelector": "tr",
+        "cellSelector": "td",
+        "columnIdentifier": {
+          "method": "headerName",
+          "value": "Name"
+        },
+        "hidingMethod": "blur",
+        "level": "3px"
+      },
+      {
+        "type": "elementSelector",
+        "parentSelector": "",
+        "childSelectors": [
+          {
+            "selector": "",
+            "method": "blur"
+          },
+          {
+            "selector": "",
+            "method": "blur",
+            "level": "2px"
+          }
+        ]
+      }
     ]
   }
 ]
