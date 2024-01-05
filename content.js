@@ -1,4 +1,4 @@
-function applyBlur(element, level = '5px') {
+function applyBlur(element, level = '3px') {
     element.style.filter = `blur(${level})`;
 }
 
@@ -144,7 +144,7 @@ function observeMutations(config) {
     const observerConfig = {
         childList: true,
         subtree: true,
-        attributes: true // If you need to observe attribute changes as well
+        attributes: false // If you need to observe attribute changes as well
     };
 
     const targetNode = document.body; // Adjust this as needed
