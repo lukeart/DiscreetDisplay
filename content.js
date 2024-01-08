@@ -52,31 +52,38 @@ function processTableColumnRule(rule, enableHiding) {
     const table = document.querySelector(rule.tableSelector);
     if (!table) return;
 
-    let columnIndex = -1;
+    const targetColumnIndices = []
     if (rule.columnIdentifier.method === 'headerName') {
         const headers = table.querySelectorAll(rule.tableHeaderSelector);
         headers.forEach((header, index) => {
             const headerName = header.querySelector(rule.columnNameSelector);
-            if (headerName && headerName.textContent.trim() === rule.columnIdentifier.value) {
-                columnIndex = index;
+            // if (headerName && headerName.textContent.trim() === rule.columnIdentifier.value) {
+            //     columnIndex = index;
+            // }
+            if (headerName && rule.columnIdentifier.values.includes(headerName.textContent.trim())) {
+                targetColumnIndices.push(index);
             }
         });
     } else if (rule.columnIdentifier.method === 'index') {
-        columnIndex = rule.columnIdentifier.value;
+        // columnIndex = rule.columnIdentifier.value;
+        targetColumnIndices.push(...rule.columnIdentifier.values);
     }
 
-    if (columnIndex === -1) return;
+    // if (columnIndex === -1) return;
+    if (targetColumnIndices.length === 0) return;
 
     const rows = table.querySelectorAll(rule.rowSelector);
     rows.forEach(row => {
-        const cell = row.querySelectorAll(rule.cellSelector)[columnIndex];
-        if (cell) {
-            if (enableHiding) {
-                applyHidingMethod(cell, rule.hidingMethod, rule.level);
-            } else {
-                removeHidingMethod(cell, rule.hidingMethod);
+        targetColumnIndices.forEach(columnIndex => {
+            const cell = row.querySelectorAll(rule.cellSelector)[columnIndex];
+            if (cell) {
+                if (enableHiding) {
+                    applyHidingMethod(cell, rule.hidingMethod, rule.level);
+                } else {
+                    removeHidingMethod(cell, rule.hidingMethod);
+                }
             }
-        }
+        })
     });
 }
 
