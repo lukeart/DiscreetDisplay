@@ -33,9 +33,13 @@ function applyPixelation(element, level) {
     // Additional CSS may be required for a more accurate pixelation effect
 }
 
-function processElementRule(rule, enableHiding) {
+function processElementRule(rule, enableHiding, categories) {
     document.querySelectorAll(rule.parentSelector).forEach(parent => {
-        rule.childSelectors.forEach(({ selector, method, level }) => {
+        rule.childSelectors.forEach(childSelector => {
+            const selector = childSelector.selector;
+            const method = childSelector.method || categories[childSelector.category].method;
+            const level = childSelector.level || categories[childSelector.category].level;
+
             const elements = parent.querySelectorAll(selector);
             elements.forEach(element => {
                 if (enableHiding) {
@@ -48,43 +52,46 @@ function processElementRule(rule, enableHiding) {
     });
 }
 
-function processTableColumnRule(rule, enableHiding) {
+function processTableColumnRule(rule, enableHiding, categories) {
+    const tableSelector = rule.tableSelector || 'table';
+    const columnNameSelector = rule.columnNameSelector || 'th';
+    const rowSelector = rule.rowSelector || 'tr';
+    const cellSelector = rule.cellSelector || 'td';
+
     const table = document.querySelector(rule.tableSelector);
     if (!table) return;
 
-    const targetColumnIndices = []
-    if (rule.columnIdentifier.method === 'headerName') {
-        const headers = table.querySelectorAll(rule.tableHeaderSelector);
-        headers.forEach((header, index) => {
-            const headerName = header.querySelector(rule.columnNameSelector);
-            // if (headerName && headerName.textContent.trim() === rule.columnIdentifier.value) {
-            //     columnIndex = index;
-            // }
-            if (headerName && rule.columnIdentifier.values.includes(headerName.textContent.trim())) {
-                targetColumnIndices.push(index);
-            }
-        });
-    } else if (rule.columnIdentifier.method === 'index') {
-        // columnIndex = rule.columnIdentifier.value;
-        targetColumnIndices.push(...rule.columnIdentifier.values);
-    }
-
-    // if (columnIndex === -1) return;
-    if (targetColumnIndices.length === 0) return;
-
-    const rows = table.querySelectorAll(rule.rowSelector);
-    rows.forEach(row => {
-        targetColumnIndices.forEach(columnIndex => {
-            const cell = row.querySelectorAll(rule.cellSelector)[columnIndex];
-            if (cell) {
-                if (enableHiding) {
-                    applyHidingMethod(cell, rule.hidingMethod, rule.level);
-                } else {
-                    removeHidingMethod(cell, rule.hidingMethod);
+    rule.columns.forEach(column => {
+        let columnIndex = -1;
+        if (rule.identifierMethod === 'headerName') {
+            const headers = table.querySelectorAll(rule.tableHeaderSelector);
+            headers.forEach((header, index) => {
+                const headerName = header.querySelector(rule.columnNameSelector);
+                if (headerName && headerName.textContent.trim() === column.identifier) {
+                    columnIndex = index;
                 }
-            }
-        })
-    });
+            });
+        } else if (rule.identifierMethod === 'index') {
+            columnIndex = column.identifier;
+        }
+
+        if (columnIndex !== -1) {
+            const method = column.method || categories[column.category].method;
+            const level = column.level || categories[column.category].level;
+
+            const rows = table.querySelectorAll(rule.rowSelector);
+            rows.forEach(row => {
+                const cell = row.querySelectorAll(rule.cellSelector)[columnIndex];
+                if (cell) {
+                    if (enableHiding) {
+                        applyHidingMethod(cell, method, level);
+                    } else {
+                        removeHidingMethod(cell, method);
+                    }
+                }
+            })
+        }
+    })
 }
 
 function applyHidingMethod(cell, method, level) {
@@ -116,13 +123,14 @@ function removeHidingMethod(cell, method) {
 }
 
 function processAllRules(config, enableHiding) {
+    const categories = config.categories;
     config.rules.forEach(rule => {
         if (rule.type === "elementSelector") {
             // Process elementSelector rules
-            processElementRule(rule, enableHiding);
+            processElementRule(rule, enableHiding, categories);
         } else if (rule.type === "tableColumn") {
             // Process tableColumn rules
-            processTableColumnRule(rule, enableHiding); // As previously defined
+            processTableColumnRule(rule, enableHiding, categories); // As previously defined
         }
     });
 }
