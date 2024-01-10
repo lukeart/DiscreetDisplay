@@ -52,6 +52,24 @@ function processElementRule(rule, enableHiding, categories) {
     });
 }
 
+function processIndexedRule(rule, enableHiding, categories) {
+    const parentElement = document.querySelector(rule.parentSelector);
+    if (!parentElement) return;
+
+    const childElement = parentElement.querySelectorAll(rule.childSelector);
+    if (rule.index >= childElement.length) return;
+
+    const targetElement = childElement[rule.index];
+    const method = rule.method || categories[rule.category].method;
+    const level = rule.level || categories[rule.category].level;
+
+    if (enableHiding) {
+        applyHidingMethod(targetElement, method, level);
+    } else {
+        removeHidingMethod(targetElement, method);
+    }
+}
+
 function processTableColumnRule(rule, enableHiding, categories) {
     const tableSelector = rule.tableSelector || 'table';
     const columnNameSelector = rule.columnNameSelector || 'th';
@@ -128,6 +146,8 @@ function processAllRules(config, enableHiding) {
         if (rule.type === "elementSelector") {
             // Process elementSelector rules
             processElementRule(rule, enableHiding, categories);
+        } else if (rule.type === "indexedSelector") {
+            processIndexedRule(rule, enableHiding, categories);
         } else if (rule.type === "tableColumn") {
             // Process tableColumn rules
             processTableColumnRule(rule, enableHiding, categories); // As previously defined
