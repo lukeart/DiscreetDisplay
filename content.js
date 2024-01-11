@@ -79,7 +79,7 @@ function processTableColumnRule(rule, enableHiding, categories) {
     const table = document.querySelector(rule.tableSelector);
     if (!table) return;
 
-    rule.columns.forEach(column => {
+    rule.childSelectors.forEach(column => {
         let columnIndex = -1;
         if (rule.identifierMethod === 'headerName') {
             const headers = table.querySelectorAll(rule.tableHeaderSelector);
@@ -186,13 +186,73 @@ function observeMutations(config) {
     observer.observe(targetNode, observerConfig);
 }
 
+function validateConfig(config) {
+    let isValid = true;
+
+    // Check if all categories are used and all used categories exist
+    const usedCategories = new Set();
+    const definedCategories = new Set(Object.keys(config.categories));
+
+
+    Object.entries(config.categories).forEach(([categoryName, categoryDetails]) => {
+        if (!categoryDetails.method) {
+            console.error(`Error: No hiding method specified for category '${categoryName}'.`);
+            isValid = false;
+        }
+    });
+
+
+    config.rules.forEach(rule => {
+        if (rule.type === "elementSelector" || rule.type === "tableColumn") {
+            // Example for elementSelector and tableColumn types
+            rule.childSelectors.forEach(child => {
+                if (child.category) {
+                    usedCategories.add(child.category);
+                    if (!definedCategories.has(child.category)) {
+                        console.error(`Error: Category '${child.category}' used but not defined.`);
+                        isValid = false;
+                    }
+                } else if (!child.method) {
+                    console.error(`Error: No hiding method specified for selector '${child.selector}'.`);
+                    isValid = false;
+                }
+            });
+        } else if (rule.type === "indexedSelector") {
+            if (rule.category) {
+                usedCategories.add(rule.category);
+                if (!definedCategories.has(rule.category)) {
+                    console.error(`Error: Category '${rule.category}' used but not defined.`);
+                    isValid = false;
+                }
+            } else if (!rule.method) {
+                console.error(`Error: No hiding method specified for selector '${rule.selector}'.`);
+                isValid = false;
+            }
+        }
+    }
+
+        // Add checks for other rule types as needed
+    );
+
+    // Warn about unused categories
+    definedCategories.forEach(category => {
+        if (!usedCategories.has(category)) {
+            console.warn(`Warning: Category '${category}' defined but not used.`);
+        }
+    });
+
+    return isValid;
+}
+
 function handleMessage(message, sender, sendResponse) {
     currentlyBlurred = message.isBlurred;
 
     fetch(browser.runtime.getURL('config.json'))
         .then(response => response.json())
         .then(config => {
-            processAllRules(config, currentlyBlurred);
+            if (validateConfig(config)) {
+                processAllRules(config, currentlyBlurred);
+            } else { console.error("Terminating extension due to invalid configuration."); }
         })
         .catch(error => console.error('Error loading configuration:', error));
 }
