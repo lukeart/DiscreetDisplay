@@ -52,10 +52,17 @@
   </style>
 </head>
 <body>
-  <label class="switch">
-    <input type="checkbox" id="toggleSwitch">
-    <span class="slider"></span>
-  </label>
+  <div id="master-toggle">
+    <label><input type="checkbox" class="switch" id="master-category-toggle"> Toggle All Categories</label>
+  </div>
+  <div id="category-toggles">
+    <label><input type="checkbox" class="switch" id="category-toggle" value="name"> Driver Name</label>
+    <label><input type="checkbox" class="switch" id="category-toggle" value="emailAddress"> Email Address</label>
+    <label><input type="checkbox" class="switch" id="category-toggle" value="phoneNumber"> Phone Number</label>
+    <label><input type="checkbox" class="switch" id="category-toggle" value="vehicleaseet"> Vehicle & Asset</label>
+    <!-- <label><input type="checkbox" id="category-toggle" value=""> </label>
+    <label><input type="checkbox" id="category-toggle" value=""> </label> -->
+  </div>
   <script src="popup.js"></script>
 </body>
 </html>

@@ -42,7 +42,7 @@ function processElementRule(rule, enableHiding, categories) {
 
             const elements = parent.querySelectorAll(selector);
             elements.forEach(element => {
-                if (enableHiding) {
+                if (enabledCategories.includes(childSelector.category)) {
                     applyHidingMethod(element, method, level);
                 } else {
                     removeHidingMethod(element, method);
@@ -63,7 +63,7 @@ function processIndexedRule(rule, enableHiding, categories) {
     const method = rule.method || categories[rule.category].method;
     const level = rule.level || categories[rule.category].level;
 
-    if (enableHiding) {
+    if (enabledCategories.includes(rule.category)) {
         applyHidingMethod(targetElement, method, level);
     } else {
         removeHidingMethod(targetElement, method);
@@ -101,7 +101,7 @@ function processTableColumnRule(rule, enableHiding, categories) {
             rows.forEach(row => {
                 const cell = row.querySelectorAll(rule.cellSelector)[columnIndex];
                 if (cell) {
-                    if (enableHiding) {
+                    if (column.category) {
                         applyHidingMethod(cell, method, level);
                     } else {
                         removeHidingMethod(cell, method);
@@ -186,15 +186,25 @@ function observeMutations(config) {
     observer.observe(targetNode, observerConfig);
 }
 
-function handleMessage(message, sender, sendResponse) {
-    currentlyBlurred = message.isBlurred;
+let enabledCategories = [];
 
-    fetch(browser.runtime.getURL('config.json'))
-        .then(response => response.json())
-        .then(config => {
-            processAllRules(config, currentlyBlurred);
-        })
-        .catch(error => console.error('Error loading configuration:', error));
+function handleMessage(message, sender, sendResponse) {
+    if (message.action === "toggleCategory") {
+        if (message.isEnabled) {
+            if (!enabledCategories.includes(message.category)) {
+                enabledCategories.push(message.category);
+            }
+        } else {
+            enabledCategories = enabledCategories.filter(cat => cat !== message.category);
+        }
+
+        fetch(browser.runtime.getURL('config.json'))
+            .then(response => response.json())
+            .then(config => {
+                processAllRules(config, true);
+            })
+            .catch(error => console.error('Error loading configuration:', error));
+    }
 }
 
 function initializeExtension() {
