@@ -72,20 +72,24 @@ function processIndexedRule(rule, enableHiding, categories) {
 
 function processTableColumnRule(rule, enableHiding, categories) {
     const tableSelector = rule.tableSelector || 'table';
-    const columnNameSelector = rule.columnNameSelector || 'th';
+    const tableHeaderSelector = rule.tableHeaderSelector || 'th';
+    // const columnNameSelector = rule.columnNameSelector || 'th';
     const rowSelector = rule.rowSelector || 'tr';
     const cellSelector = rule.cellSelector || 'td';
 
-    const table = document.querySelector(rule.tableSelector);
+    const table = document.querySelector(tableSelector);
     if (!table) return;
 
     rule.childSelectors.forEach(column => {
         let columnIndex = -1;
         if (rule.identifierMethod === 'headerName') {
-            const headers = table.querySelectorAll(rule.tableHeaderSelector);
+            const headers = table.querySelectorAll(tableHeaderSelector);
             headers.forEach((header, index) => {
-                const headerName = header.querySelector(rule.columnNameSelector);
-                if (headerName && headerName.textContent.trim() === column.identifier) {
+                // const headerName = header.querySelector(rule.columnNameSelector);
+                // if (headerName && headerName.textContent.trim() === column.identifier) {
+                //     columnIndex = index;
+                // }
+                if (header.textContent.trim() === column.identifier) {
                     columnIndex = index;
                 }
             });
@@ -97,9 +101,9 @@ function processTableColumnRule(rule, enableHiding, categories) {
             const method = column.method || categories[column.category].method;
             const level = column.level || categories[column.category].level;
 
-            const rows = table.querySelectorAll(rule.rowSelector);
+            const rows = table.querySelectorAll(rowSelector);
             rows.forEach(row => {
-                const cell = row.querySelectorAll(rule.cellSelector)[columnIndex];
+                const cell = row.querySelectorAll(cellSelector)[columnIndex];
                 if (cell) {
                     if (enableHiding) {
                         applyHidingMethod(cell, method, level);
@@ -140,7 +144,12 @@ function removeHidingMethod(cell, method) {
     }
 }
 
+let isUpdatingStyle = false;
+
 function processAllRules(config, enableHiding) {
+    if (isUpdatingStyle) return;
+    isUpdatingStyle = true;
+
     const categories = config.categories;
     config.rules.forEach(rule => {
         if (rule.type === "elementSelector") {
@@ -153,10 +162,13 @@ function processAllRules(config, enableHiding) {
             processTableColumnRule(rule, enableHiding, categories); // As previously defined
         }
     });
+
+    isUpdatingStyle = false;
 }
 
 
 let currentlyBlurred = false; // Track if the blur is currently applied
+
 
 function observeMutations(config) {
     const observer = new MutationObserver(mutations => {
