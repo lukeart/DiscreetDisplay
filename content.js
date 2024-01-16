@@ -116,31 +116,39 @@ function processTableColumnRule(rule, enableHiding, categories) {
     })
 }
 
+const hiddenMarkerClass = 'disreet-display'
+
 function applyHidingMethod(cell, method, level) {
-    switch (method) {
-        case 'blur':
-            applyBlur(cell, level);
-            break;
-        case 'pixelate':
-            //
-            break;
-        case 'scramble':
-            applyRot13(cell);
-            break;
+    if (!cell.classList.contains(hiddenMarkerClass)) {
+        switch (method) {
+            case 'blur':
+                applyBlur(cell, level);
+                break;
+            case 'pixelate':
+                //
+                break;
+            case 'scramble':
+                applyRot13(cell);
+                break;
+        }
+        cell.classList.add(hiddenMarkerClass);
     }
 }
 
 function removeHidingMethod(cell, method) {
-    switch (method) {
-        case 'blur':
-            cell.style.filter = '';
-            break;
-        case 'pixelate':
-            cell.style.filter = '';
-            break;
-        case 'scramble':
-            applyRot13(cell);
-            break;
+    if (cell.classList.contains(hiddenMarkerClass)) {
+        switch (method) {
+            case 'blur':
+                cell.style.filter = '';
+                break;
+            case 'pixelate':
+                cell.style.filter = '';
+                break;
+            case 'scramble':
+                applyRot13(cell);
+                break;
+        }
+        cell.classList.remove(hiddenMarkerClass);
     }
 }
 
