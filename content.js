@@ -2,8 +2,28 @@ function applyBlur(element, level = '3px') {
     element.style.filter = `blur(${level})`;
 }
 
+function findTextNode(element, searchText) {
+    if (element.nodeType === Node.TEXT_NODE && element.textContent.includes(searchText)) {
+        return element;
+    }
+
+    for (const child of element.childNodes) {
+        if (child.nodeType === Node.ELEMENT_NODE || child.nodeType === Node.TEXT_NODE) {
+            const foundNode = findTextNode(child,searchText);
+            if (foundNode) {
+                return foundNode;
+            }
+        }
+    }
+    return null;
+}
+
 function applyRot13(element) {
-    element.textContent = element.textContent.replace(/\w/g, function (char) {
+    const textNode = findTextNode(element, element.textContent);
+    if (!textNode) 
+    return;
+
+    textNode.textContent = textNode.textContent.replace(/\w/g, function (char) {
         if (/[a-zA-Z]/.test(char)) {
             const base = char.charCodeAt(0) >= 97 ? 'a'.charCodeAt(0) : 'A'.charCodeAt(0);
             return String.fromCharCode(base + (char.charCodeAt(0) - base + 13) % 26);
@@ -116,7 +136,7 @@ function processTableColumnRule(rule, enableHiding, categories) {
     })
 }
 
-const hiddenMarkerClass = 'disreet-display'
+const hiddenMarkerClass = 'discreet-display'
 
 function applyHidingMethod(cell, method, level) {
     if (!cell.classList.contains(hiddenMarkerClass)) {
