@@ -9,7 +9,7 @@ function findTextNode(element, searchText) {
 
     for (const child of element.childNodes) {
         if (child.nodeType === Node.ELEMENT_NODE || child.nodeType === Node.TEXT_NODE) {
-            const foundNode = findTextNode(child,searchText);
+            const foundNode = findTextNode(child, searchText);
             if (foundNode) {
                 return foundNode;
             }
@@ -20,8 +20,7 @@ function findTextNode(element, searchText) {
 
 function applyRot13(element) {
     const textNode = findTextNode(element, element.textContent);
-    if (!textNode) 
-    return;
+    if (!textNode) return; // This shouldn't happen
 
     textNode.textContent = textNode.textContent.replace(/\w/g, function (char) {
         if (/[a-zA-Z]/.test(char)) {
@@ -50,7 +49,6 @@ function applyPixelation(element, level) {
     }
 
     element.style.filter = `blur(${pixelSize})`;
-    // Additional CSS may be required for a more accurate pixelation effect
 }
 
 function processElementRule(rule, enableHiding, categories) {
@@ -187,7 +185,7 @@ function processAllRules(config, enableHiding) {
             processIndexedRule(rule, enableHiding, categories);
         } else if (rule.type === "tableColumn") {
             // Process tableColumn rules
-            processTableColumnRule(rule, enableHiding, categories); // As previously defined
+            processTableColumnRule(rule, enableHiding, categories);
         }
     });
 
@@ -200,29 +198,16 @@ let currentlyBlurred = false; // Track if the blur is currently applied
 
 function observeMutations(config) {
     const observer = new MutationObserver(mutations => {
-        // let shouldReapply = mutations.some(mutation => {
-        //     // Iterate through all rules to see if the mutation target matches
-        //     config.rules.forEach(rule => {
-        //         if (rule.type === "tableColumn" && mutation.target.matches(rule.tableSelector)) {
-        //             shouldReapply = true;
-        //         } else if (rule.type === "elementSelector" && mutation.target.matches(rule.parentSelector)) {
-        //             shouldReapply = true;
-        //         }
-        //     });
-        // });
-
-        // if (shouldReapply) {
         processAllRules(config, currentlyBlurred);
-        // }
     });
 
     const observerConfig = {
         childList: true,
         subtree: true,
-        attributes: false // If you need to observe attribute changes as well
+        attributes: false
     };
 
-    const targetNode = document.body; // Adjust this as needed
+    const targetNode = document.body;
     observer.observe(targetNode, observerConfig);
 }
 
@@ -244,7 +229,6 @@ function validateConfig(config) {
 
     config.rules.forEach(rule => {
         if (rule.type === "elementSelector" || rule.type === "tableColumn") {
-            // Example for elementSelector and tableColumn types
             rule.childSelectors.forEach(child => {
                 if (child.category) {
                     usedCategories.add(child.category);
@@ -269,10 +253,7 @@ function validateConfig(config) {
                 isValid = false;
             }
         }
-    }
-
-        // Add checks for other rule types as needed
-    );
+    });
 
     // Warn about unused categories
     definedCategories.forEach(category => {
@@ -284,31 +265,37 @@ function validateConfig(config) {
     return isValid;
 }
 
-function handleMessage(message, sender, sendResponse) {
-    currentlyBlurred = message.isBlurred;
+const runtime = (typeof browser !== 'undefined' && browser.runtime) ? browser.runtime : chrome.runtime;
 
-    fetch(browser.runtime.getURL('config.json'))
+function fetchAndProcessConfig(isBlurred) {
+    fetch(runtime.getURL('config.json'))
         .then(response => response.json())
         .then(config => {
             if (validateConfig(config)) {
-                processAllRules(config, currentlyBlurred);
-            } else { console.error("Terminating extension due to invalid configuration."); }
+                processAllRules(config, isBlurred);
+                observeMutations(config);
+            } else {
+                console.error("Terminating extension due to invalid configuration.");
+            }
         })
-        .catch(error => console.error('Error loading configuration:', error));
+        .catch(error => console.error('Error loading configuration: ', error));
+}
+function handleMessage(message, sender, sendResponse) {
+    currentlyBlurred = message.isBlurred;
+    fetchAndProcessConfig(currentlyBlurred);
 }
 
 function initializeExtension() {
-    browser.storage.local.get('isBlurred', (result) => {
-        const isBlurred = result.isBlurred || false;
-        fetch(browser.runtime.getURL('config.json'))
-            .then(response => response.json())
-            .then(config => {
-                processAllRules(config, isBlurred);
-                observeMutations(config);
-            })
-            .catch(error => console.error('Error loading configuration:', error));
-    });
+    const handleIsBlurred = (result) => {
+        const isBlurred = (result.isBlurred !== undefined) ? result.isBlurred : false;
+        fetchAndProcessConfig(isBlurred);
+    };
+    if (typeof browser !== 'undefined' && browser.storage) {
+        browser.storage.local.get('isBlurred').then(handleIsBlurred);
+    } else if (typeof chrome !== 'undefined' && chrome.storage) {
+        chrome.storage.local.get('isBlurred', handleIsBlurred);
+    }
 }
 
 initializeExtension();
-browser.runtime.onMessage.addListener(handleMessage);
+runtime.onMessage.addListener(handleMessage);
