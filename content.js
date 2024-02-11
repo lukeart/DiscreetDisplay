@@ -1,7 +1,3 @@
-function applyBlur(element, level = '3px') {
-    element.style.filter = `blur(${level})`;
-}
-
 function findTextNode(element, searchText) {
     if (element.nodeType === Node.TEXT_NODE && element.textContent.includes(searchText)) {
         return element;
@@ -32,39 +28,15 @@ function applyRot13(element) {
     });
 }
 
-function applyPixelation(element, level) {
-    let pixelSize;
-    switch (level) {
-        case 'low':
-            pixelSize = '10px';
-            break;
-        case 'medium':
-            pixelSize = '5px';
-            break;
-        case 'high':
-            pixelSize = '2px';
-            break;
-        default:
-            pixelSize = '5px';
-    }
-
-    element.style.filter = `blur(${pixelSize})`;
-}
-
 function processElementRule(rule, enableHiding, categories) {
     document.querySelectorAll(rule.parentSelector).forEach(parent => {
         rule.childSelectors.forEach(childSelector => {
             const selector = childSelector.selector;
-            const method = childSelector.method || categories[childSelector.category].method;
-            const level = childSelector.level || categories[childSelector.category].level;
+            const category = childSelector.category;
 
             const elements = parent.querySelectorAll(selector);
             elements.forEach(element => {
-                if (enableHiding) {
-                    applyHidingMethod(element, method, level);
-                } else {
-                    removeHidingMethod(element, method);
-                }
+                toggleHidingMethod(element, category, categories, enableHiding);
             });
         });
     });
@@ -78,20 +50,13 @@ function processIndexedRule(rule, enableHiding, categories) {
     if (rule.index >= childElement.length) return;
 
     const targetElement = childElement[rule.index];
-    const method = rule.method || categories[rule.category].method;
-    const level = rule.level || categories[rule.category].level;
 
-    if (enableHiding) {
-        applyHidingMethod(targetElement, method, level);
-    } else {
-        removeHidingMethod(targetElement, method);
-    }
+    toggleHidingMethod(targetElement, rule.category, categories, enableHiding);
 }
 
 function processTableColumnRule(rule, enableHiding, categories) {
     const tableSelector = rule.tableSelector || 'table';
     const tableHeaderSelector = rule.tableHeaderSelector || 'th';
-    // const columnNameSelector = rule.columnNameSelector || 'th';
     const rowSelector = rule.rowSelector || 'tr';
     const cellSelector = rule.cellSelector || 'td';
 
@@ -103,10 +68,7 @@ function processTableColumnRule(rule, enableHiding, categories) {
         if (rule.identifierMethod === 'headerName') {
             const headers = table.querySelectorAll(tableHeaderSelector);
             headers.forEach((header, index) => {
-                // const headerName = header.querySelector(rule.columnNameSelector);
-                // if (headerName && headerName.textContent.trim() === column.identifier) {
-                //     columnIndex = index;
-                // }
+                console.log(header.textContent.trim());
                 if (header.textContent.trim() === column.identifier) {
                     columnIndex = index;
                 }
@@ -116,59 +78,95 @@ function processTableColumnRule(rule, enableHiding, categories) {
         }
 
         if (columnIndex !== -1) {
-            const method = column.method || categories[column.category].method;
-            const level = column.level || categories[column.category].level;
-
             const rows = table.querySelectorAll(rowSelector);
             rows.forEach(row => {
                 const cell = row.querySelectorAll(cellSelector)[columnIndex];
                 if (cell) {
-                    if (enableHiding) {
-                        applyHidingMethod(cell, method, level);
-                    } else {
-                        removeHidingMethod(cell, method);
-                    }
+                    toggleHidingMethod(cell, column.category, categories, enableHiding);
                 }
             })
         }
     })
 }
 
-const hiddenMarkerClass = 'discreet-display'
+function processCssSelectorRule(rule, enableHiding, categories) {
+    const elements = document.querySelectorAll(rule.selector);
+    const category = rule.category;
+    
+    elements.forEach(element => {
+        toggleHidingMethod(element, category, categories, enableHiding)
+    })
+}
 
-function applyHidingMethod(cell, method, level) {
-    if (!cell.classList.contains(hiddenMarkerClass)) {
-        switch (method) {
+const prefix = 'discreet-'
+const uniqueStyleId = prefix + 'style';
+
+function injectInlineCss(config) {
+    if (document.getElementById(uniqueStyleId)) {
+        return;
+    }
+
+    const styleEl = document.createElement('style');
+    styleEl.id = uniqueStyleId;
+
+    document.head.appendChild(styleEl);
+
+    let cssContent = '';
+
+    Object.entries(config.categories).forEach(([categoryName, categoryDetails]) => {
+        let cssRule = '';
+        switch (categoryDetails.method) {
             case 'blur':
-                applyBlur(cell, level);
+                cssRule = `filter: blur(${categoryDetails.level || '3px'});`;
                 break;
             case 'pixelate':
-                //
+                const pixelSize = categoryDetails.level === 'low' ? '10px' :
+                    categoryDetails.level === 'medium' ? '5px' : '2px';
+                cssRule = `filter: blur(${pixelSize});`;
                 break;
             case 'scramble':
-                applyRot13(cell);
+                // Class serves as a marker. Actual scrambling is done by JS.
                 break;
+            case 'invisible':
+                cssRule = 'visibility: hidden;';
+                break;
+            // ... other methods ...
         }
-        cell.classList.add(hiddenMarkerClass);
+        if (cssRule) {
+            cssContent += `.${prefix}${categoryName} { ${cssRule} }\n`;
+        }
+    });
+
+    styleEl.textContent = cssContent;
+}
+
+function toggleHidingMethod(element, category, categories, shouldApply) {
+    const className = `${prefix}${category}`;
+    const method = categories[category].method;
+    
+    if (shouldApply) {
+        if (!element.classList.contains(className)) {
+            element.classList.add(className);
+            if (method === 'scramble') {
+                applyRot13(element);
+            }
+        }
+    } else {
+        if (element.classList.contains(className)) {
+            element.classList.remove(className);
+            if (method === 'scramble') {
+                applyRot13(element);
+            }
+        }
     }
 }
 
-function removeHidingMethod(cell, method) {
-    if (cell.classList.contains(hiddenMarkerClass)) {
-        switch (method) {
-            case 'blur':
-                cell.style.filter = '';
-                break;
-            case 'pixelate':
-                cell.style.filter = '';
-                break;
-            case 'scramble':
-                applyRot13(cell);
-                break;
-        }
-        cell.classList.remove(hiddenMarkerClass);
-    }
-}
+const ruleProcessors = {
+    "elementSelector": processElementRule,
+    "indexedSelector": processIndexedRule,
+    "tableColumn": processTableColumnRule,
+    "cssSelector": processCssSelectorRule
+};
 
 let isUpdatingStyle = false;
 
@@ -178,14 +176,11 @@ function processAllRules(config, enableHiding) {
 
     const categories = config.categories;
     config.rules.forEach(rule => {
-        if (rule.type === "elementSelector") {
-            // Process elementSelector rules
-            processElementRule(rule, enableHiding, categories);
-        } else if (rule.type === "indexedSelector") {
-            processIndexedRule(rule, enableHiding, categories);
-        } else if (rule.type === "tableColumn") {
-            // Process tableColumn rules
-            processTableColumnRule(rule, enableHiding, categories);
+        const processRule = ruleProcessors[rule.type];
+        if (processRule) {
+            processRule(rule, enableHiding, categories);
+        } else {
+            console.error('No processor defined for rule type: ${rule.type}.')
         }
     });
 
@@ -194,7 +189,6 @@ function processAllRules(config, enableHiding) {
 
 
 let currentlyBlurred = false; // Track if the blur is currently applied
-
 
 function observeMutations(config) {
     const observer = new MutationObserver(mutations => {
@@ -208,6 +202,7 @@ function observeMutations(config) {
     };
 
     const targetNode = document.body;
+    
     observer.observe(targetNode, observerConfig);
 }
 
@@ -228,29 +223,36 @@ function validateConfig(config) {
 
 
     config.rules.forEach(rule => {
-        if (rule.type === "elementSelector" || rule.type === "tableColumn") {
-            rule.childSelectors.forEach(child => {
-                if (child.category) {
-                    usedCategories.add(child.category);
-                    if (!definedCategories.has(child.category)) {
-                        console.error(`Error: Category '${child.category}' used but not defined.`);
+        switch (rule.type) {
+            case "elementSelector":
+            case "tableColumn": {
+                rule.childSelectors.forEach(child => {
+                    if (child.category) {
+                        usedCategories.add(child.category);
+                        if (!definedCategories.has(child.category)) {
+                            console.error(`Error: Category '${child.category}' used but not defined.`);
+                            isValid = false;
+                        }
+                    } else if (!child.method) {
+                        console.error(`Error: No hiding method specified for selector '${child.selector}'.`);
                         isValid = false;
                     }
-                } else if (!child.method) {
-                    console.error(`Error: No hiding method specified for selector '${child.selector}'.`);
+                });
+                break;
+            }
+            case "cssSelector":
+            case "indexedSelector": {
+                if (rule.category) {
+                    usedCategories.add(rule.category);
+                    if (!definedCategories.has(rule.category)) {
+                        console.error(`Error: Category '${rule.category}' used but not defined.`);
+                        isValid = false;
+                    }
+                } else if (!rule.method) {
+                    console.error(`Error: No hiding method specified for selector '${rule.selector}'.`);
                     isValid = false;
                 }
-            });
-        } else if (rule.type === "indexedSelector") {
-            if (rule.category) {
-                usedCategories.add(rule.category);
-                if (!definedCategories.has(rule.category)) {
-                    console.error(`Error: Category '${rule.category}' used but not defined.`);
-                    isValid = false;
-                }
-            } else if (!rule.method) {
-                console.error(`Error: No hiding method specified for selector '${rule.selector}'.`);
-                isValid = false;
+                break;
             }
         }
     });
@@ -272,6 +274,7 @@ function fetchAndProcessConfig(isBlurred) {
         .then(response => response.json())
         .then(config => {
             if (validateConfig(config)) {
+                injectInlineCss(config);
                 processAllRules(config, isBlurred);
                 observeMutations(config);
             } else {
