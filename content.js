@@ -68,7 +68,6 @@ function processTableColumnRule(rule, enableHiding, categories) {
         if (rule.identifierMethod === 'headerName') {
             const headers = table.querySelectorAll(tableHeaderSelector);
             headers.forEach((header, index) => {
-                console.log(header.textContent.trim());
                 if (header.textContent.trim() === column.identifier) {
                     columnIndex = index;
                 }
