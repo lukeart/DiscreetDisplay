@@ -3,7 +3,11 @@
 <head>
   <title>DiscreetDisplay Control</title>
   <style>
-    .switch {
+    .master-category-toggle.partial {
+      background-color: blue;
+      filter: none;
+    }
+    /* .switch {
       position: relative;
       display: inline-block;
       width: 60px;
@@ -48,18 +52,18 @@
       -webkit-transform: translateX(26px);
       -ms-transform: translateX(26px);
       transform: translateX(26px);
-    }
+    } */
   </style>
 </head>
 <body>
   <div id="master-toggle">
-    <label><input type="checkbox" class="switch" id="master-category-toggle"> Toggle All Categories</label>
+    <label><input type="checkbox" class="switch master-category-toggle"> Toggle All Categories</label>
   </div>
   <div id="category-toggles">
-    <label><input type="checkbox" class="switch" id="category-toggle" value="name"> Driver Name</label>
-    <label><input type="checkbox" class="switch" id="category-toggle" value="emailAddress"> Email Address</label>
-    <label><input type="checkbox" class="switch" id="category-toggle" value="phoneNumber"> Phone Number</label>
-    <label><input type="checkbox" class="switch" id="category-toggle" value="vehicleaseet"> Vehicle & Asset</label>
+    <!-- <label><input type="checkbox" class="switch category-toggle" value="driver"> Driver Name</label><br/>
+    <label><input type="checkbox" class="switch category-toggle" value="emailAddress"> Email Address</label><br/>
+    <label><input type="checkbox" class="switch category-toggle" value="phoneNumber"> Phone Number</label><br/>
+    <label><input type="checkbox" class="switch category-toggle" value="vehicleasset"> Vehicle & Asset</label><br/> -->
     <!-- <label><input type="checkbox" id="category-toggle" value=""> </label>
     <label><input type="checkbox" id="category-toggle" value=""> </label> -->
   </div>

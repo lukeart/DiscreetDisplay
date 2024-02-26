@@ -1,63 +1,94 @@
-let isBlurred = false; // To keep track of the current state
+// Utilizing async/await for clearer asynchronous code
+document.addEventListener('DOMContentLoaded', async () => {
+  try {
+      const config = await fetchConfig();
+      populateCategoryToggles(config);
+      updateToggleStatesFromContentScript();
 
-// document.getElementById('toggleSwitch').addEventListener('change', (event) => {
-//   isBlurred = event.target.checked;
-//   sendMessageToContentScript(isBlurred);
+      document.querySelector('.master-category-toggle').addEventListener('change', handleMasterToggleChange);
+  } catch (error) {
+      console.error('Error initializing popup:', error);
+  }
+});
 
-//   // Save the state to storage
-//   browser.storage.local.set({ isBlurred });
-// });
-
-function sendMessageToContentScript(blurState) {
-  fetch(browser.runtime.getURL('config.json'))
-    .then(response => response.json())
-    .then(config => {
-      browser.tabs.query({ active: true, currentWindow: true }, tabs => {
-        browser.tabs.sendMessage(tabs[0].id, { isBlurred: blurState, config });
-      });
-    })
-    .catch(error => console.error('Error loading configuration:', error));
+function getURL(path) {
+  if (typeof browser !== 'undefined' && browser.runtime && browser.runtime.getURL) {
+      return browser.runtime.getURL(path);
+  }
+  else if (typeof chrome !== 'undefined' && chrome.runtime && chrome.runtime.getURL) {
+      return chrome.runtime.getURL(path);
+  }
+  else {
+      console.error('Runtime environment not supported');
+      return ''; // Or handle this case as appropriate for your extension
+  }
 }
 
-document.addEventListener('DOMContentLoaded', () => {
-  const masterToggle = document.getElementById('master-category-toggle');
+
+async function fetchConfig() {
+  const response = await fetch(getURL('config.json'));
+  if (!response.ok) throw new Error('Failed to load configuration');
+  return response.json();
+}
+
+function populateCategoryToggles(config) {
+  const container = document.getElementById('category-toggles');
+  Object.entries(config.categories).forEach(([key, value]) => {
+      const label = createCategoryToggle(key, value.displayName);
+      container.appendChild(label);
+      container.appendChild(document.createElement('br'));
+  });
+}
+
+function createCategoryToggle(key, displayName) {
+  const label = document.createElement('label');
+  const input = document.createElement('input');
+  input.type = 'checkbox';
+  input.classList.add('category-toggle');
+  input.value = key;
+  label.appendChild(input);
+  label.append(` ${displayName}`);
+  input.addEventListener('change', () => toggleCategory(key, input.checked));
+  return label;
+}
+
+async function updateToggleStatesFromContentScript() {
+  const tabs = await browser.tabs.query({ active: true, currentWindow: true });
+  const response = await browser.tabs.sendMessage(tabs[0].id, { action: "getEnabledCategories" });
+  if (response && response.enabledCategories) {
+      updateToggleStates(response.enabledCategories);
+  }
+}
+
+function handleMasterToggleChange(event) {
+  const isMasterEnabled = event.target.checked;
   const categoryToggles = document.querySelectorAll('.category-toggle');
-
-  console.log(masterToggle);
-  console.log(categoryToggles);
-
-
-  const updateMasterToggleState = () => {
-    const allEnabled = Array.from(categoryToggles).every(toggle => toggle.checked);
-    console.log("allEnabled: " + allEnabled);
-
-    masterToggle.checked = allEnabled;
-  };
-
-  
-  const toggleCategory = (category, isEnabled) => {
-    browser.tabs.query({active: true, currentWindow: true}, tabs => {
-        browser.tabs.sendMessage(tabs[0].id, {
-            action: "toggleCategory",
-            category: category,
-            isEnabled: isEnabled
-        });
-    });
-  };
-
-  masterToggle.addEventListener('change', () => {
-    const isMasterEnabled = masterToggle.checked;
-    categoryToggles.forEach(toggle => {
+  categoryToggles.forEach(toggle => {
       toggle.checked = isMasterEnabled;
       toggleCategory(toggle.value, isMasterEnabled);
-    });
   });
+}
 
+function toggleCategory(category, isEnabled) {
+  browser.tabs.query({ active: true, currentWindow: true }, tabs => {
+      browser.tabs.sendMessage(tabs[0].id, { action: "toggleCategory", category, isEnabled });
+  });
+}
+
+function updateToggleStates(enabledCategories) {
+  const categoryToggles = document.querySelectorAll('.category-toggle');
   categoryToggles.forEach(toggle => {
-    toggle.addEventListener('change', () => {
-        toggleCategory(toggle.value, toggle.checked);
-        updateMasterToggleState();
-    });
+      toggle.checked = enabledCategories.includes(toggle.value);
   });
+  updateMasterToggleState();
+}
 
-});
+function updateMasterToggleState() {
+  const categoryToggles = document.querySelectorAll('.category-toggle');
+  const allChecked = Array.from(categoryToggles).every(toggle => toggle.checked);
+  const someChecked = Array.from(categoryToggles).some(toggle => toggle.checked);
+  const masterToggle = document.querySelector('.master-category-toggle');
+
+  masterToggle.checked = allChecked;
+  masterToggle.classList.toggle('partial', someChecked && !allChecked);
+}
