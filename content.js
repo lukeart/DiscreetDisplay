@@ -216,9 +216,9 @@ function observeMutations(config) {
 
 
 function handleMessage(message, sender, sendResponse) {
-    console.log(message);
+    // console.log(message);
     if (message.action === "toggleCategory") {
-        console.log(message, message, sendResponse);
+        // console.log(message, message, sendResponse);
         handleCategoryToggle(message.category, message.isEnabled);
     } else if (message.action === "getEnabledCategories") {
         sendResponse({ enabledCategories: Array.from(enabledCategories) });
@@ -231,7 +231,7 @@ function handleCategoryToggle(category, isEnabled) {
     } else {
         enabledCategories.delete(category);
     }
-    console.log(enabledCategories);
+    // console.log(enabledCategories);
     fetch(runtime.getURL('config.json'))
         .then(response => response.json())
         .then(config => {
