@@ -334,3 +334,68 @@ function initializeExtension() {
 runtime.onMessage.addListener(handleMessage);
 initializeExtension();
 
+document.addEventListener('contextmenu', function (event) {
+    event.preventDefault();
+    const leafNode = event.target;
+    const selector = findShortestSelector(leafNode);
+    // Code to add the new entry to the context menu goes here
+    console.log(selector); // For debugging
+});
+
+function findShortestSelector(element) {
+    function setsAreEqual(setA, setB) {
+        if (setA.size !== setB.size) return false;
+        for (let item of setA) {
+            if (!setB.has(item)) return false;
+        }
+        return true;
+    }
+
+    let path = getDomPath(element); // Assuming getDomPath is defined elsewhere
+    console.log("Path: ", path);
+
+    let candidateSelectors = path.map(node => node.classes.length ? `.${node.classes.join('.')}` : "");
+
+    // Optimize the selector by permanently removing classes that still allow for a unique match
+    let optimizedSelector = candidateSelectors.join(' ');
+    console.log("optimizedSelector: ", optimizedSelector);
+    let allElements = new Set(document.querySelectorAll(optimizedSelector));
+    console.log("allElements: ",allElements);
+    for (let i = candidateSelectors.length - 1; i >= 0; i--) {
+        // Attempt to simplify each node's selector by removing classes one by one
+        let node = path[i];
+        let classes = node.classes;
+        for (let j = 0; j < classes.length; j++) {
+            let tempClasses = [...classes]; // Make a copy of the classes array
+            tempClasses.splice(j, 1); // Remove the class at index j
+            let tempSelector = candidateSelectors.slice(); // Copy the entire candidateSelectors array
+            // Reconstruct the selector for this node without the removed class
+            tempSelector[i] = (tempClasses.length > 0 ? '.' + tempClasses.join('.') : '');
+            // Test the new selector
+            let testSelector = tempSelector.join(' ');
+            let testElements = new Set(document.querySelectorAll(testSelector));
+            if (setsAreEqual(allElements,testElements)) {
+                // If the selector still uniquely identifies the element, update the optimized selector and classes
+                optimizedSelector = testSelector;
+                classes.splice(j, 1); // Permanently remove the class
+                j--; // Adjust the index since we've modified the array
+            }
+        }
+        // Update the candidateSelectors array with the optimized selector for this node
+        candidateSelectors[i] =  (classes.length > 0 ? '.' + classes.join('.') : '');
+    }
+
+    return optimizedSelector;
+}
+
+function getDomPath(element) {
+    let path = [];
+    while (element.parentNode) {
+        let tag = element.tagName.toLowerCase();
+        let classes = Array.from(element.classList).filter(className => !className.match(/__[a-zA-Z0-9]+/)); // Example filter for CSS module classes
+        path.unshift({ tag, classes });
+        element = element.parentNode;
+    }
+    return path;
+}
+
