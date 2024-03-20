@@ -1,16 +1,25 @@
 {
   "manifest_version": 3,
   "name": "DiscreetDisplay",
-  "version": "0.2",
+  "version": "0.3",
   "description": "Blurs specific elements in web pages.",
-  "permissions": ["activeTab", "storage"],
+  "permissions": [
+    "activeTab",
+    "storage"
+  ],
   "host_permissions": [
-    "*://live-wf.webfleet.com/*"
+    "*://live-wf.webfleet.com/*",
+    "*://tachograph.webfleet.com/*"
   ],
   "content_scripts": [
     {
-      "matches": ["*://live-wf.webfleet.com/*"],
-      "js": ["content.js"]
+      "matches": [
+        "*://live-wf.webfleet.com/*",
+        "*://tachograph.webfleet.com/*"
+      ],
+      "js": [
+        "content.js"
+      ]
     }
   ],
   "action": {
@@ -24,8 +33,13 @@
   },
   "web_accessible_resources": [
     {
-      "resources": ["config.json"],
-      "matches": ["*://live-wf.webfleet.com/*"]
+      "resources": [
+        "config.json"
+      ],
+      "matches": [
+        "*://live-wf.webfleet.com/*",
+        "*://tachograph.webfleet.com/*"
+      ]
     }
   ]
 }
